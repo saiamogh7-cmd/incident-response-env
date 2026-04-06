@@ -2,7 +2,7 @@ name: incident-response-env
 type: container
 version: "1.0.0"
 description: "An environment where an AI agent acts as an on-call SRE, diagnosing system incidents, writing runbooks, and drafting postmortems from logs, metrics, and alerts."
-author: "saiamogh7"
+author: "saiamogh7-cmd"
 tags:
   - openenv
   - devops

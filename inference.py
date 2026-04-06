@@ -5,7 +5,7 @@ from openai import OpenAI
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-API_KEY = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+API_KEY = os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY") or os.getenv("API_KEY")
 ENV_URL = os.getenv("ENV_URL", "http://localhost:7860")
 TASK_LEVEL_VAR = os.getenv("TASK_LEVEL")
 MAX_STEPS = 8
@@ -14,7 +14,7 @@ def run_task(client, task_level):
     print(f"[START] task={task_level} env=incident-response-env model={MODEL_NAME}")
     
     try:
-        resp = requests.post(f"{ENV_URL}/reset", json={"task_level": task_level})
+        resp = requests.post(f"{ENV_URL}/reset", json={"task_level": task_level}, timeout=30)
         resp.raise_for_status()
         obs = resp.json()
     except Exception as e:
@@ -29,7 +29,7 @@ def run_task(client, task_level):
     while not done and step < MAX_STEPS:
         step += 1
         
-        system_prompt = "You are an expert Site Reliability Engineer responding to a system incident. You will receive alert details, service metrics, recent logs, and knowledge base articles. Based on this information, decide on the best action to take. Always respond with a valid JSON object matching the IncidentAction schema: {action_type, reasoning, target_service, runbook_steps, severity_assessment, postmortem_sections}. Be specific and technical."
+        system_prompt = "You are an expert Site Reliability Engineer responding to a system incident. You will receive alert details, service metrics, recent logs, and knowledge base articles. Based on this information, decide on the best action to take. Always respond with a valid JSON object matching the IncidentAction schema: {action_type, reasoning, target_service, runbook_steps, severity_assessment, postmortem_sections}. The 'action_type' MUST be one of exactly: ['diagnose', 'escalate', 'write_runbook', 'apply_fix', 'write_postmortem', 'resolve']. Be specific and technical."
         
         prompt = f"""Current Step: {step}
 Time Elapsed: {obs.get('time_elapsed_minutes', 0)} mins
@@ -87,11 +87,15 @@ Return ONLY valid JSON.
                 "severity_assessment": None,
                 "postmortem_sections": None
             }
+        else:
+            valid_actions = ['diagnose', 'escalate', 'write_runbook', 'apply_fix', 'write_postmortem', 'resolve']
+            if action.get("action_type") not in valid_actions:
+                action["action_type"] = "diagnose"
             
         action_str = action.get("action_type", "unknown")
             
         try:
-            step_resp = requests.post(f"{ENV_URL}/step", json=action)
+            step_resp = requests.post(f"{ENV_URL}/step", json=action, timeout=30)
             step_resp.raise_for_status()
             result = step_resp.json()
             

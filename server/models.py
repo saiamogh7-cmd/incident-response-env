@@ -212,7 +212,7 @@ class IncidentAction(BaseModel):
         description="Completed sections for a postmortem, keys: summary, timeline, root_cause, impact, action_items. Used if action_type is 'write_postmortem'."
     )
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
 
 class StepResult(BaseModel):
