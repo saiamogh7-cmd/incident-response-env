@@ -54,12 +54,12 @@ async def runtime_error_handler(request: Request, exc: RuntimeError):
 
 
 class ResetRequest(BaseModel):
-    task_level: str
+    task_level: str = "easy"
     scenario_id: Optional[str] = None
 
 
 @app.post("/reset", response_model=IncidentObservation)
-async def reset_env(req: ResetRequest):
+async def reset_env(req: ResetRequest = ResetRequest()):
     global env
     env = IncidentResponseEnv(task_level=req.task_level)
     obs = env.reset(scenario_id=req.scenario_id)
