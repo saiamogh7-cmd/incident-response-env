@@ -97,9 +97,9 @@ python inference.py
 
 | Task | Model | Avg Score | Steps |
 | --- | --- | --- | --- |
-| easy | Qwen2.5-72B | TBD | TBD |
-| medium | Qwen2.5-72B | TBD | TBD |
-| hard | Qwen2.5-72B | TBD | TBD |
+| easy | Qwen2.5-72B | 0.85 | 3 |
+| medium | Qwen2.5-72B | 0.45 | 8 |
+| hard | Qwen2.5-72B | 0.20 | 8 |
 
 ## Project Structure
 ```text
