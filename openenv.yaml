@@ -1,0 +1,35 @@
+name: incident-response-env
+type: container
+version: "1.0.0"
+description: "An environment where an AI agent acts as an on-call SRE, diagnosing system incidents, writing runbooks, and drafting postmortems from logs, metrics, and alerts."
+author: "saiamogh7"
+tags:
+  - openenv
+  - devops
+  - incident-response
+  - sre
+  - real-world
+tasks:
+  - name: easy
+    description: "Identify the root cause service from structured logs and metrics"
+    max_steps: 8
+    score_threshold: 0.7
+  - name: medium
+    description: "Write a step-by-step remediation runbook for a service cascade failure"
+    max_steps: 8
+    score_threshold: 0.7
+  - name: hard
+    description: "Diagnose a multi-service cascading failure and produce a complete postmortem"
+    max_steps: 8
+    score_threshold: 0.7
+api:
+  reset: POST /reset
+  step: POST /step
+  state: GET /state
+observation_space:
+  type: object
+  description: "Alert payload, service metrics, recent logs, KB articles, incident status"
+action_space:
+  type: object
+  description: "Structured action with type, reasoning, target service, runbook steps, postmortem sections"
+reward_range: [0.0, 1.0]
