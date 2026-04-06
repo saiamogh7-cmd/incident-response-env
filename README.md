@@ -2,7 +2,7 @@
 title: Incident Response Env
 emoji: 🚨
 colorFrom: red
-colorTo: orange
+colorTo: yellow
 sdk: docker
 pinned: false
 ---
