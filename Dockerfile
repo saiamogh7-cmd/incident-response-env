@@ -1,5 +1,6 @@
 # HuggingFace Spaces compatible Dockerfile — port 7860 required
-FROM python:3.11-slim
+# Using AWS Public ECR mirror to bypass Docker Hub rate limiting on the Hackathon validator
+FROM public.ecr.aws/docker/library/python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
