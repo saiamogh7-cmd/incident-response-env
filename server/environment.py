@@ -119,6 +119,14 @@ class IncidentResponseEnv:
             max_steps=self.max_steps
         )
         
+        # Guarantee that if we add reward, total_reward stays safely below 0.99
+        if self.total_reward + reward > 0.99:
+            reward = max(0.0, 0.99 - self.total_reward)
+            
+        # Ensure reward is never <= 0.0 unless total_reward is already exactly 0.99
+        if reward <= 0.0 and self.total_reward < 0.99:
+            reward = 0.01
+            
         self.rewards_history.append(reward)
         self.total_reward += reward
         
