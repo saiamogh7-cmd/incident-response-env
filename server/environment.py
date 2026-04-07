@@ -111,7 +111,7 @@ class IncidentResponseEnv:
         action_summary = f"[{self.time_elapsed_minutes}m] {action.action_type} on target '{target}': {action.reasoning}"
         self.previous_actions.append(action_summary)
         
-        reward, self.done, msg = grade_step(
+        absolute_score, self.done, msg = grade_step(
             action=action, 
             scenario=self.current_scenario, 
             task_level=self.task_level, 
@@ -119,8 +119,22 @@ class IncidentResponseEnv:
             max_steps=self.max_steps
         )
         
-        self.rewards_history.append(reward)
+        # Convert absolute episode score into incremental step reward
+        reward = max(0.0, absolute_score - self.total_reward)
+        
         self.total_reward += reward
+        
+        # Strictly bound the total_reward on episode termination to (0, 1) exclusive
+        if self.done:
+            if self.total_reward <= 0.0:
+                reward += 0.05
+                self.total_reward += 0.05
+            elif self.total_reward >= 1.0:
+                excess = self.total_reward - 0.99
+                reward -= excess
+                self.total_reward = 0.99
+                
+        self.rewards_history.append(reward)
         
         if action.action_type == "diagnose":
             self.current_incident_status = "investigating"
