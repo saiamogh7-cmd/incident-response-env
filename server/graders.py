@@ -18,20 +18,20 @@ def grade_easy(action: IncidentAction, scenario: dict) -> float:
     """
     Grades easy tasks: isolating the failing service.
     Returns:
-      - 1.0 for exact target_service match
+      - 0.99 for exact target_service match
       - 0.6 for partial match
       - 0.2 if wrong service but action_type == 'diagnose'
-      - 0.0 otherwise
+      - 0.01 otherwise
     """
     true_svc = scenario.get("true_affected_service", "")
     if not true_svc:
-        return 0.0
+        return 0.01
         
     true_svc_lower = true_svc.lower()
     target_svc = action.target_service.lower() if action.target_service else ""
     
     if target_svc == true_svc_lower:
-        return 1.0
+        return 0.99
         
     if target_svc and (target_svc in true_svc_lower or true_svc_lower in target_svc):
         return 0.6
@@ -39,7 +39,7 @@ def grade_easy(action: IncidentAction, scenario: dict) -> float:
     if action.action_type == "diagnose":
         return 0.2
         
-    return 0.0
+    return 0.01
 
 
 def grade_medium(action: IncidentAction, scenario: dict) -> float:
@@ -49,11 +49,11 @@ def grade_medium(action: IncidentAction, scenario: dict) -> float:
     """
     required_kws = scenario.get("required_runbook_keywords", [])
     if not required_kws:
-        return 0.0
+        return 0.01
         
     steps = action.runbook_steps
     if not steps:
-        return 0.0
+        return 0.01
         
     all_text = " ".join(steps).lower()
     found_count = sum(1 for kw in required_kws if kw.lower() in all_text)
@@ -69,7 +69,7 @@ def grade_medium(action: IncidentAction, scenario: dict) -> float:
     if target_svc and true_svc and target_svc == true_svc:
         base_score += 0.1
         
-    return min(1.0, base_score)
+    return max(0.01, min(0.99, base_score))
 
 
 def grade_hard(action: IncidentAction, scenario: dict) -> float:
@@ -79,11 +79,11 @@ def grade_hard(action: IncidentAction, scenario: dict) -> float:
     """
     req_sections = scenario.get("required_postmortem_sections", {})
     if not req_sections:
-        return 0.0
+        return 0.01
         
     sections = action.postmortem_sections
     if not sections:
-        return 0.0
+        return 0.01
         
     section_scores = []
     for sec_name, keywords in req_sections.items():
@@ -109,7 +109,7 @@ def grade_hard(action: IncidentAction, scenario: dict) -> float:
     if target_svc and true_svc and target_svc == true_svc:
         base_score += 0.1
         
-    return min(1.0, base_score)
+    return max(0.01, min(0.99, base_score))
 
 
 def grade_step(action: IncidentAction, scenario: dict, task_level: str, step_number: int, max_steps: int) -> tuple[float, bool, str]:
