@@ -639,5 +639,76 @@ INCIDENT_SCENARIOS = [
                 "content": "All inter-service communications must implement exponential backoff and jitter. A missing backoff can cause a retry storm that acts like a self-inflicted DDoS."
             }
         ]
+    },
+    {
+        "incident_id": "INC-HARD-004",
+        "task_level": "hard",
+        "title": "Cascading failure due to synchronous third-party webhook",
+        "true_root_cause": "A third-party webhook receiver started responding very slowly, and because our notification-service sent requests synchronously without timeouts, all worker threads got blocked. This caused upstream services to back up out of memory.",
+        "true_affected_service": "notification-service",
+        "required_runbook_keywords": ["timeout", "async", "third-party", "webhook", "threads"],
+        "required_postmortem_sections": {
+            "summary": ["cascading failure", "webhook", "timeout", "notification"],
+            "root_cause": ["synchronous calls", "third-party degraded", "thread exhaustion"],
+            "timeline": ["third-party latency spike", "notification service blocked", "upstream out of memory"],
+            "impact": ["entire platform unresponsive", "messages lost"],
+            "action_items": ["add timeout", "make webhooks async", "circuit breaker"]
+        },
+        "alert": {
+            "alert_id": "ALT-204",
+            "title": "Complete Platform Outage / OOM cascading",
+            "severity": "P1",
+            "triggered_at": "2024-03-31T09:00:00Z",
+            "affected_services": ["notification-service", "api-gateway", "user-service"],
+            "description": "Critical alerts firing across all microservices. Services OOMing and restarting."
+        },
+        "metrics": [
+            {
+                "service_name": "notification-service",
+                "metric_name": "active_threads",
+                "value": 100.0,
+                "unit": "%",
+                "threshold": 80.0,
+                "is_anomalous": True
+            },
+            {
+                "service_name": "notification-service",
+                "metric_name": "third_party_latency",
+                "value": 60000.0,
+                "unit": "ms",
+                "threshold": 1000.0,
+                "is_anomalous": True
+            },
+            {
+                "service_name": "user-service",
+                "metric_name": "memory_usage",
+                "value": 99.5,
+                "unit": "%",
+                "threshold": 85.0,
+                "is_anomalous": True
+            }
+        ],
+        "recent_logs": [
+            {"timestamp": "2024-03-31T08:55:00Z", "level": "INFO", "service": "notification-service", "message": "Triggering webhook to https://vendor.example/hook", "trace_id": "hook-1"},
+            {"timestamp": "2024-03-31T08:56:00Z", "level": "WARN", "service": "notification-service", "message": "Thread pool nearing capacity...", "trace_id": None},
+            {"timestamp": "2024-03-31T08:57:00Z", "level": "ERROR", "service": "user-service", "message": "Failed to send notification request: Read timed out.", "trace_id": "usr-99"},
+            {"timestamp": "2024-03-31T08:58:00Z", "level": "ERROR", "service": "notification-service", "message": "Rejected execution. All 500 threads busy.", "trace_id": None},
+            {"timestamp": "2024-03-31T08:59:00Z", "level": "CRITICAL", "service": "user-service", "message": "java.lang.OutOfMemoryError: GC overhead limit exceeded. Restarting.", "trace_id": None},
+            {"timestamp": "2024-03-31T09:00:00Z", "level": "CRITICAL", "service": "api-gateway", "message": "503 Service Unavailable from upstream user-service", "trace_id": None}
+        ],
+        "kb_articles": [
+            {
+                "article_id": "KB-NTS-500",
+                "title": "Debugging Notification Service",
+                "tags": ["notification", "thread exhaustion"],
+                "content": "The notification service sends messages to email, SMS, and webhooks. If a vendor is slow, it blocks our threads. Uncouple by disabling the failing delivery channel."
+            },
+            {
+                "article_id": "KB-ARC-001",
+                "title": "Preventing Cascading Failures",
+                "tags": ["architecture", "cascading"],
+                "content": "A classic cascading failure occurs when a downstream service hangs, causing upstream clients to hoard memory/connections until they crash. The hanging service must be isolated or restarted."
+            }
+        ]
     }
 ]

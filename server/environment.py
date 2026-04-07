@@ -125,7 +125,7 @@ class IncidentResponseEnv:
         if action.action_type == "diagnose":
             self.current_incident_status = "investigating"
         elif action.action_type in ["write_runbook", "apply_fix"]:
-            self.current_incident_status = "mitigating"
+            self.current_incident_status = "mitigated"
         elif action.action_type in ["resolve", "write_postmortem"]:
             if reward > 0.5:
                 self.current_incident_status = "resolved"
