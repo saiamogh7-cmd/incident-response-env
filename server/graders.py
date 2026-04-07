@@ -141,8 +141,8 @@ def grade_step(action: IncidentAction, scenario: dict, task_level: str, step_num
     # Apply a time-pressure discount: reward *= (1.0 - 0.05 * max(0, step_number - 3))
     discount = 1.0 - 0.05 * max(0, step_number - 3)
     
-    # Floor at 0.0 effectively bounding it safely 
-    final_reward = max(0.0, base_reward * discount)
+    # Floor at 0.01 and cap at 0.99 to strictly enforce (0, 1) bounds
+    final_reward = max(0.01, min(0.99, base_reward * discount))
     
     if discount < 1.0:
         msg += f" Time discount applied (factor: {discount:.2f})."
