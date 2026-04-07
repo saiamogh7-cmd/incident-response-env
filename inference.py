@@ -103,14 +103,15 @@ Return ONLY valid JSON.
             done = result.get("done", False)
             obs = result.get("observation", {})
         except Exception as e:
-            reward = 0.0
+            reward = 0.01
             done = True
             error_msg = f"Env API error: {str(e)}"
             
         rewards.append(reward)
         print(f"[STEP] step={step} action={action_str} reward={reward:.2f} done={str(done).lower()} error={error_msg}")
         
-    score = sum(rewards) / MAX_STEPS
+    raw_score = sum(rewards) / MAX_STEPS
+    score = min(max(raw_score, 0.01), 0.99)
     success = score >= 0.1
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
     
