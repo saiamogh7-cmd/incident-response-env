@@ -6,6 +6,59 @@ colorTo: purple
 sdk: docker
 pinned: false
 ---
+# Incident Response Environment API 🛡️
+
+Welcome to the **Incident Response Environment API**. This platform acts as an interactive, simulated sandbox where Artificial Intelligence (AI) agents can train on cybersecurity and IT incident responses. 
+
+Our API provides a safe environment for AI models to train, identify their weaknesses, and receive precise performance metrics—all without risking real-world systems.
+
+## 🚀 Why Use This API?
+* **Safe Sandbox Testing:** Let your AI practice fixing crashed servers or stopping simulated hackers in a disposable environment. If the AI makes a mistake, no real damage is done.
+* **Reinforcement Learning:** Perfect for training AI agents through trial and error. The environment provides immediate feedback on whether an action helped or made the situation worse.
+* **Benchmarking & Validation:** Evaluate different AI models and expose their logical loopholes. Get hard data and concrete scores to prove how accurately your AI makes decisions.
+
+---
+
+## ⚙️ API Endpoints
+
+The API is built with FastAPI and provides a simple set of endpoints to interact with the simulation. You can view the interactive Swagger UI documentation by visiting `/docs` on the base URL.
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/health` | **Health Check:** Verifies that the API server is awake and running. |
+| `GET` | `/tasks` | **List Tasks:** Returns a list of available simulation scenarios or "levels" to play. |
+| `POST` | `/reset` | **Reset Environment:** Initializes a new session and returns the starting state of the incident. |
+| `POST` | `/step` | **Take Action:** Send a command to the environment (e.g., "Block IP address") and receive the outcome. |
+| `GET` | `/state` | **Check State:** View the current status of the simulated environment, including your score and active alerts. |
+
+---
+
+## 💻 Quickstart Guide (Python)
+
+Here is a simple example of how to connect an AI agent or a Python script to the API to start training:
+
+```python
+import requests
+
+BASE_URL = "[https://saiamogh7-cmd-incident-response-env.hf.space](https://saiamogh7-cmd-incident-response-env.hf.space)"
+
+# 1. Check if the API is alive
+requests.get(f"{BASE_URL}/health")
+
+# 2. Reset the environment to start a new simulation
+reset_data = requests.post(f"{BASE_URL}/reset", json={}).json()
+print("Starting State:", reset_data)
+
+# 3. Take a step (Send your AI's decision to the environment)
+# Note: Check the /docs schema to ensure your payload matches the expected fields
+action_payload = {
+    "action": "Investigate server logs",
+    "text": "Checking for unusual login activity"
+}
+step_result = requests.post(f"{BASE_URL}/step", json=action_payload).json()
+
+# 4. View the results of your action
+print("Result of action:", step_result)
 
 # Incident Response & Runbook Automation Environment
 
