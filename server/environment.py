@@ -112,13 +112,12 @@ class IncidentResponseEnv:
         )
         
         # -- Phase 2 Professional Reward Shaping ------------------------------
-        # 1. Total reward clamp (Cumulative < 1.0)
+        # 1. Total reward clamp (Strictly < 1.0)
         if self.total_reward + reward > 0.99:
             reward = max(0.01, 0.99 - self.total_reward)
             
-        # 2. Reward Floor (Strictly non-zero for deep validation signal)
-        if reward <= 0.00:
-            reward = 0.01
+        # 2. Reward Floor & Ceiling (Strictly exclusive boundaries)
+        reward = max(0.01, min(0.99, reward))
 
         # 3. Implicit Resolution (Sync status with solution threshold)
         if reward >= 0.70 or (self.total_reward + reward >= 0.85):
@@ -129,16 +128,20 @@ class IncidentResponseEnv:
             self.current_incident_status = "mitigated"
         
         self.rewards_history.append(reward)
-        self.total_reward += reward
+        self.total_reward = max(0.01, min(0.99, self.total_reward + reward))
         
         obs = self._build_observation()
 
-        
         return StepResult(
             observation=obs,
             reward=reward,
             done=self.done,
-            info={"message": msg, "step_score": reward, "task_level": self.task_level}
+            info={
+                "message": msg, 
+                "step_score": reward, 
+                "total_episode_score": self.total_reward,
+                "task_level": self.task_level
+            }
         )
 
     def state(self) -> EpisodeState:
