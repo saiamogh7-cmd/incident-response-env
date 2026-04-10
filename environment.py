@@ -9,20 +9,13 @@ and vending observations and rewards.
 import random
 from typing import Optional
 
-try:
-    from server.models import (
-        IncidentAction, IncidentObservation, StepResult, EpisodeState,
-        ServiceMetric, LogEntry, AlertPayload, KBArticle
-    )
-    from server.graders import grade_step
-    from server.scenarios import INCIDENT_SCENARIOS
-except ImportError:
-    from models import (
-        IncidentAction, IncidentObservation, StepResult, EpisodeState,
-        ServiceMetric, LogEntry, AlertPayload, KBArticle
-    )
-    from graders import grade_step
-    from scenarios import INCIDENT_SCENARIOS
+from models import (
+    IncidentAction, IncidentObservation, StepResult, EpisodeState,
+    ServiceMetric, LogEntry, AlertPayload, KBArticle
+)
+from graders import grade_step
+from scenarios import INCIDENT_SCENARIOS
+
 
 
 class IncidentResponseEnv:
