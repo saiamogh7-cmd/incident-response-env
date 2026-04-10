@@ -1,28 +1,30 @@
-# HuggingFace Spaces compatible Dockerfile — port 7860 required
-# Using AWS Public ECR mirror to bypass Docker Hub rate limiting on the Hackathon validator
-FROM public.ecr.aws/docker/library/python:3.11-slim
+# HuggingFace Spaces — port 7860 required
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-RUN useradd -m -u 1000 appuser
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN useradd --uid 1000 --create-home appuser
 
 WORKDIR /app
 
-COPY server/requirements.txt /app/server/
-RUN pip install --no-cache-dir -r /app/server/requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY server/ /app/server/
-COPY openenv.yaml /app/
+COPY main.py environment.py models.py graders.py scenarios.py ./
+COPY openenv.yaml .
 
 RUN chown -R appuser:appuser /app
+
 USER appuser
 
 EXPOSE 7860
 
-HEALTHCHECK --interval=30s CMD curl -f http://localhost:7860/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s \
+    CMD curl -f http://localhost:7860/health || exit 1
 
-CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
