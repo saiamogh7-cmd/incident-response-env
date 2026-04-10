@@ -10,8 +10,8 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from environment import IncidentResponseEnv
-from models import IncidentAction, IncidentObservation, StepResult, EpisodeState
+from server.environment import IncidentResponseEnv
+from server.models import IncidentAction, IncidentObservation, StepResult, EpisodeState
 
 
 # Global environment instance

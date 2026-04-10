@@ -9,13 +9,12 @@ and vending observations and rewards.
 import random
 from typing import Optional
 
-from models import (
+from server.models import (
     IncidentAction, IncidentObservation, StepResult, EpisodeState,
     ServiceMetric, LogEntry, AlertPayload, KBArticle
 )
-from graders import grade_step
-from scenarios import INCIDENT_SCENARIOS
-
+from server.graders import grade_step
+from server.scenarios import INCIDENT_SCENARIOS
 
 
 class IncidentResponseEnv:
@@ -112,28 +111,28 @@ class IncidentResponseEnv:
             max_steps=self.max_steps
         )
         
-        # Guarantee that if we add reward, total_reward stays safely below 0.99
+        # -- Phase 2 Professional Reward Shaping ------------------------------
+        # 1. Total reward clamp (Cumulative < 1.0)
         if self.total_reward + reward > 0.99:
-            reward = max(0.0, 0.99 - self.total_reward)
+            reward = max(0.01, 0.99 - self.total_reward)
             
-        # Ensure reward is never <= 0.0 unless total_reward is already exactly 0.99
-        if reward <= 0.0 and self.total_reward < 0.99:
+        # 2. Reward Floor (Strictly non-zero for deep validation signal)
+        if reward <= 0.00:
             reward = 0.01
-            
-        self.rewards_history.append(reward)
-        self.total_reward += reward
-        
-        if action.action_type == "diagnose":
+
+        # 3. Implicit Resolution (Sync status with solution threshold)
+        if reward >= 0.70 or (self.total_reward + reward >= 0.85):
+            self.current_incident_status = "resolved"
+        elif action.action_type == "diagnose":
             self.current_incident_status = "investigating"
         elif action.action_type in ["write_runbook", "apply_fix"]:
             self.current_incident_status = "mitigated"
-        elif action.action_type in ["resolve", "write_postmortem"]:
-            if reward > 0.5:
-                self.current_incident_status = "resolved"
-            else:
-                self.current_incident_status = "investigating"
-                
+        
+        self.rewards_history.append(reward)
+        self.total_reward += reward
+        
         obs = self._build_observation()
+
         
         return StepResult(
             observation=obs,
